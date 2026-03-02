@@ -1,65 +1,96 @@
 <div id="restaurant-pos-app">
-	<!-- Order Type & Table Section -->
-	<div class="pos-header">
-		<div class="pos-header-left">
-			<h3 class="pos-title">🍽️ Restaurant POS</h3>
-		</div>
-		<div class="pos-header-right">
-			<div class="order-type-toggle">
-				<button class="btn btn-order-type active" data-type="Dine In">
-					<i class="fa fa-utensils"></i> Dine In
-				</button>
-				<button class="btn btn-order-type" data-type="Parcel">
-					<i class="fa fa-shopping-bag"></i> Parcel
-				</button>
+	<!-- POS Tabs -->
+	<div class="pos-tabs">
+		<button class="pos-tab active" data-tab="new-order">
+			<i class="fa fa-plus-circle"></i> New Order
+		</button>
+		<button class="pos-tab" data-tab="orders-list">
+			<i class="fa fa-list"></i> Orders <span class="pos-tab-badge" id="orders-badge"></span>
+		</button>
+		<button class="pos-tab" data-tab="tables-view">
+			<i class="fa fa-th-large"></i> Tables
+		</button>
+	</div>
+
+	<!-- TAB 1: New Order -->
+	<div class="pos-tab-content active" id="tab-new-order">
+		<div class="pos-header">
+			<div class="pos-header-left">
+				<h3 class="pos-title">🍽️ Restaurant POS</h3>
 			</div>
-			<select id="table-selector" class="form-control table-select">
-				<option value="">Select Table...</option>
-			</select>
+			<div class="pos-header-right">
+				<div class="order-type-toggle">
+					<button class="btn btn-order-type active" data-type="Dine In">
+						<i class="fa fa-utensils"></i> Dine In
+					</button>
+					<button class="btn btn-order-type" data-type="Parcel">
+						<i class="fa fa-shopping-bag"></i> Parcel
+					</button>
+				</div>
+				<select id="table-selector" class="form-control table-select">
+					<option value="">Select Table...</option>
+				</select>
+			</div>
+		</div>
+
+		<div class="pos-body">
+			<div class="pos-menu-panel">
+				<div class="menu-search">
+					<input type="text" id="menu-search" class="form-control" placeholder="🔍 Search menu items...">
+				</div>
+				<div class="menu-categories" id="menu-categories"></div>
+				<div class="menu-items" id="menu-items"></div>
+			</div>
+
+			<div class="pos-order-panel">
+				<div class="order-header">
+					<h4>Current Order</h4>
+					<span id="order-count" class="badge badge-primary">0 items</span>
+				</div>
+				<div class="order-items" id="order-items">
+					<div class="empty-order">
+						<i class="fa fa-shopping-cart fa-3x"></i>
+						<p>No items added yet</p>
+					</div>
+				</div>
+				<div class="order-footer">
+					<div class="order-total">
+						<span>Total</span>
+						<span id="order-total" class="total-amount">₹0.00</span>
+					</div>
+					<div class="order-actions">
+						<button id="btn-clear-order" class="btn btn-danger btn-sm">
+							<i class="fa fa-trash"></i> Clear
+						</button>
+						<button id="btn-save-order" class="btn btn-primary btn-lg">
+							<i class="fa fa-check"></i> Place Order
+						</button>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
-	<div class="pos-body">
-		<!-- Left Panel: Menu -->
-		<div class="pos-menu-panel">
-			<div class="menu-search">
-				<input type="text" id="menu-search" class="form-control" placeholder="🔍 Search menu items...">
+	<!-- TAB 2: Orders List -->
+	<div class="pos-tab-content" id="tab-orders-list">
+		<div class="orders-toolbar">
+			<div class="orders-filters">
+				<button class="btn orders-filter active" data-status="active">🔴 Active</button>
+				<button class="btn orders-filter" data-status="In Progress">📝 New</button>
+				<button class="btn orders-filter" data-status="Preparing">🔥 Preparing</button>
+				<button class="btn orders-filter" data-status="Ready">✅ Ready</button>
+				<button class="btn orders-filter" data-status="Served">🍽️ Served</button>
+				<button class="btn orders-filter" data-status="Completed">✔️ Done</button>
 			</div>
-			<div class="menu-categories" id="menu-categories"></div>
-			<div class="menu-items" id="menu-items"></div>
+			<button class="btn btn-sm orders-refresh" id="btn-refresh-orders">
+				<i class="fa fa-sync"></i> Refresh
+			</button>
 		</div>
-
-		<!-- Right Panel: Current Order -->
-		<div class="pos-order-panel">
-			<div class="order-header">
-				<h4>Current Order</h4>
-				<span id="order-count" class="badge badge-primary">0 items</span>
-			</div>
-			<div class="order-items" id="order-items">
-				<div class="empty-order">
-					<i class="fa fa-shopping-cart fa-3x"></i>
-					<p>No items added yet</p>
-				</div>
-			</div>
-			<div class="order-footer">
-				<div class="order-total">
-					<span>Total</span>
-					<span id="order-total" class="total-amount">₹0.00</span>
-				</div>
-				<div class="order-actions">
-					<button id="btn-clear-order" class="btn btn-danger btn-sm">
-						<i class="fa fa-trash"></i> Clear
-					</button>
-					<button id="btn-save-order" class="btn btn-primary btn-lg">
-						<i class="fa fa-check"></i> Place Order
-					</button>
-				</div>
-			</div>
-		</div>
+		<div class="orders-list" id="orders-list"></div>
 	</div>
 
-	<!-- Table Management Section -->
-	<div class="pos-tables-section" id="tables-section" style="display:none;">
+	<!-- TAB 3: Tables View -->
+	<div class="pos-tab-content" id="tab-tables-view">
 		<h4 class="section-title">📋 Table Overview</h4>
 		<div class="tables-grid" id="tables-grid"></div>
 	</div>

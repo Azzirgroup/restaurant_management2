@@ -18,6 +18,7 @@ class RestaurantPOS {
         this.currency_symbol = "₹";
         this.menu_items = {};
         this.active_category = null;
+        this.orders_filter = "active";
 
         this.load_settings();
         this.setup_events();
@@ -39,6 +40,33 @@ class RestaurantPOS {
     }
 
     setup_events() {
+        // === Tab switching ===
+        $(".pos-tab").on("click", (e) => {
+            $(".pos-tab").removeClass("active");
+            $(e.currentTarget).addClass("active");
+            let tab = $(e.currentTarget).data("tab");
+            $(".pos-tab-content").removeClass("active");
+            $(`#tab-${tab}`).addClass("active");
+
+            // Load data when switching tabs
+            if (tab === "orders-list") {
+                this.load_orders();
+            } else if (tab === "tables-view") {
+                this.load_tables();
+            }
+        });
+
+        // === Orders filter ===
+        $(".orders-filter").on("click", (e) => {
+            $(".orders-filter").removeClass("active");
+            $(e.currentTarget).addClass("active");
+            this.orders_filter = $(e.currentTarget).data("status");
+            this.load_orders();
+        });
+
+        // Refresh orders
+        $("#btn-refresh-orders").on("click", () => this.load_orders());
+
         // Order type toggle
         $(".btn-order-type").on("click", (e) => {
             $(".btn-order-type").removeClass("active");
@@ -74,6 +102,221 @@ class RestaurantPOS {
         });
     }
 
+    // ============================
+    // ORDERS LIST TAB
+    // ============================
+
+    load_orders() {
+        let filters = {};
+        if (this.orders_filter === "active") {
+            filters.status = ["in", ["In Progress", "Preparing", "Ready", "Served"]];
+        } else {
+            filters.status = this.orders_filter;
+        }
+
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Restaurant Order",
+                filters: filters,
+                fields: ["name", "order_type", "table", "status", "total_amount",
+                    "total_qty", "order_date", "customer_name", "payment_status"],
+                order_by: "modified desc",
+                limit_page_length: 50,
+            },
+            callback: (r) => {
+                if (r.message) {
+                    this.render_orders(r.message);
+                }
+            },
+        });
+    }
+
+    render_orders(orders) {
+        let $container = $("#orders-list");
+        $container.empty();
+
+        // Update badge
+        if (this.orders_filter === "active") {
+            $("#orders-badge").text(orders.length || "");
+        }
+
+        if (orders.length === 0) {
+            $container.html(`
+				<div class="orders-empty">
+					<i class="fa fa-inbox fa-3x"></i>
+					<p>No orders found</p>
+				</div>
+			`);
+            return;
+        }
+
+        orders.forEach((order) => {
+            let table_info = "";
+            if (order.order_type === "Dine In" && order.table) {
+                table_info = `<span class="ol-badge ol-table">🪑 ${order.table}</span>`;
+            } else {
+                table_info = `<span class="ol-badge ol-parcel">📦 Parcel</span>`;
+            }
+
+            let status_colors = {
+                "In Progress": "#FF9800",
+                "Preparing": "#FFC107",
+                "Ready": "#9C27B0",
+                "Served": "#00BCD4",
+                "Completed": "#4CAF50",
+                "Cancelled": "#F44336",
+            };
+            let status_color = status_colors[order.status] || "#888";
+
+            // Next action button based on current status
+            let action_btn = this.get_next_action_btn(order);
+
+            // Time ago
+            let time_display = this.time_ago(order.order_date);
+
+            $container.append(`
+				<div class="ol-card" data-order="${order.name}">
+					<div class="ol-left">
+						<div class="ol-name">${order.name}</div>
+						<div class="ol-meta">
+							${table_info}
+							<span class="ol-time"><i class="fa fa-clock"></i> ${time_display}</span>
+							${order.customer_name ? `<span class="ol-customer">${order.customer_name}</span>` : ""}
+						</div>
+					</div>
+					<div class="ol-center">
+						<span class="ol-status" style="background:${status_color};">${order.status}</span>
+						<span class="ol-amount">${this.currency_symbol}${parseFloat(order.total_amount).toFixed(2)}</span>
+						${order.payment_status === "Paid" ? '<span class="ol-paid">💰 Paid</span>' : ''}
+					</div>
+					<div class="ol-actions">
+						${action_btn}
+					</div>
+				</div>
+			`);
+        });
+
+        // Bind action buttons
+        $container.find(".ol-action-btn").on("click", (e) => {
+            e.stopPropagation();
+            let order_name = $(e.currentTarget).data("order");
+            let new_status = $(e.currentTarget).data("status");
+
+            if (new_status === "PAYMENT") {
+                this.show_payment_dialog(order_name);
+            } else {
+                this.update_order_status(order_name, new_status);
+            }
+        });
+    }
+
+    get_next_action_btn(order) {
+        let btns = "";
+        switch (order.status) {
+            case "In Progress":
+                btns = `<button class="ol-action-btn ol-btn-preparing" data-order="${order.name}" data-status="Preparing">
+					🔥 Start Preparing
+				</button>`;
+                break;
+            case "Preparing":
+                btns = `<button class="ol-action-btn ol-btn-ready" data-order="${order.name}" data-status="Ready">
+					✅ Mark Ready
+				</button>`;
+                break;
+            case "Ready":
+                btns = `<button class="ol-action-btn ol-btn-served" data-order="${order.name}" data-status="Served">
+					🍽️ Mark Served
+				</button>`;
+                break;
+            case "Served":
+                if (order.payment_status !== "Paid") {
+                    btns = `<button class="ol-action-btn ol-btn-payment" data-order="${order.name}" data-status="PAYMENT">
+						💰 Collect Payment
+					</button>`;
+                } else {
+                    btns = `<button class="ol-action-btn ol-btn-complete" data-order="${order.name}" data-status="Completed">
+						✔️ Complete
+					</button>`;
+                }
+                break;
+            case "Completed":
+                btns = `<span class="ol-done-label">✅ Done</span>`;
+                break;
+        }
+        return btns;
+    }
+
+    update_order_status(order_name, status) {
+        frappe.call({
+            method: "restaurant_management.restaurant_management.api.update_order_status",
+            args: { order_name: order_name, status: status },
+            callback: (r) => {
+                if (r.message && r.message.status === "success") {
+                    frappe.show_alert({
+                        message: r.message.message,
+                        indicator: "green",
+                    });
+                    this.load_orders();
+                    this.load_tables();
+                }
+            },
+        });
+    }
+
+    show_payment_dialog(order_name) {
+        let d = new frappe.ui.Dialog({
+            title: __("Collect Payment — {0}", [order_name]),
+            fields: [
+                {
+                    label: __("Payment Mode"),
+                    fieldname: "payment_mode",
+                    fieldtype: "Select",
+                    options: "Cash\nCard\nUPI\nOther",
+                    default: "Cash",
+                    reqd: 1,
+                },
+            ],
+            primary_action_label: __("Confirm Payment"),
+            primary_action: (values) => {
+                frappe.call({
+                    method: "restaurant_management.restaurant_management.api.collect_payment",
+                    args: {
+                        order_name: order_name,
+                        payment_mode: values.payment_mode,
+                    },
+                    callback: (r) => {
+                        if (r.message && r.message.status === "success") {
+                            frappe.show_alert({
+                                message: r.message.message,
+                                indicator: "green",
+                            });
+                            d.hide();
+                            this.load_orders();
+                        }
+                    },
+                });
+            },
+        });
+        d.show();
+    }
+
+    time_ago(dt) {
+        if (!dt) return "";
+        let now = new Date();
+        let then = new Date(dt);
+        let diff = Math.floor((now - then) / 60000);
+        if (diff < 1) return "just now";
+        if (diff < 60) return `${diff}m ago`;
+        let hours = Math.floor(diff / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return `${Math.floor(hours / 24)}d ago`;
+    }
+
+    // ============================
+    // MENU & NEW ORDER TAB
+    // ============================
+
     load_menu() {
         frappe.call({
             method: "restaurant_management.restaurant_management.api.get_menu_items",
@@ -81,7 +324,6 @@ class RestaurantPOS {
                 if (r.message) {
                     this.menu_items = r.message;
                     this.render_categories();
-                    // Select first category
                     let first_cat = Object.keys(this.menu_items)[0];
                     if (first_cat) {
                         this.active_category = first_cat;
@@ -108,7 +350,6 @@ class RestaurantPOS {
                         }
                     });
 
-                    // Render table overview
                     this.render_tables(r.message);
                 }
             },
@@ -273,7 +514,6 @@ class RestaurantPOS {
 			`);
         });
 
-        // Bind events
         $container.find(".btn-minus").on("click", (e) => {
             this.update_quantity($(e.currentTarget).data("item"), -1);
         });
@@ -326,7 +566,6 @@ class RestaurantPOS {
                     this.clear_order();
                     this.load_tables();
 
-                    // Ask if user wants to print
                     frappe.confirm(
                         __("Order placed! Do you want to print the KOT?"),
                         () => {
@@ -349,10 +588,13 @@ class RestaurantPOS {
         });
     }
 
+    // ============================
+    // TABLES TAB
+    // ============================
+
     render_tables(tables) {
         let $grid = $("#tables-grid");
         $grid.empty();
-        $("#tables-section").show();
 
         tables.forEach((table) => {
             let status_class = table.status.toLowerCase().replace(" ", "-");
@@ -390,7 +632,6 @@ class RestaurantPOS {
 			`);
         });
 
-        // Bind events
         $grid.find(".btn-clear-table").on("click", (e) => {
             e.stopPropagation();
             let table_name = $(e.currentTarget).data("table");
