@@ -312,10 +312,25 @@ class RestaurantPOS {
             args: { order_name: order_name },
             callback: (res) => {
                 if (res.message) {
-                    let w = window.open();
-                    w.document.write(res.message);
-                    w.document.close();
-                    w.print();
+                    // Using iframe instead of window.open() to prevent mobile popup blockers
+                    let printFrame = document.getElementById("receipt-print-frame");
+                    if (!printFrame) {
+                        printFrame = document.createElement("iframe");
+                        printFrame.id = "receipt-print-frame";
+                        printFrame.style.display = "none";
+                        document.body.appendChild(printFrame);
+                    }
+
+                    let doc = printFrame.contentWindow.document;
+                    doc.open();
+                    doc.write(res.message);
+                    doc.close();
+
+                    // Small delay to allow CSS/fonts to render
+                    setTimeout(() => {
+                        printFrame.contentWindow.focus();
+                        printFrame.contentWindow.print();
+                    }, 500);
                 }
             },
         });

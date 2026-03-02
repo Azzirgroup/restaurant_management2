@@ -802,6 +802,13 @@
 	color: #00838F;
 }
 
+.ol-btn-print {
+	background: #ECEFF1;
+	color: #37474F;
+	margin-right: 8px;
+	/* For desktop spacing when multiple buttons exist */
+}
+
 .ol-btn-payment {
 	background: #E8F5E9;
 	color: #2E7D32;
@@ -826,8 +833,17 @@
 	}
 
 	.ol-actions {
-		text-align: center;
-		margin-top: 8px;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 8px;
+		margin-top: 12px;
+	}
+
+	.ol-action-btn {
+		margin-right: 0;
+		/* Override desktop margin */
+		width: 100%;
 	}
 
 	.ol-meta {
