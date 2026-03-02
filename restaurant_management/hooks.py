@@ -27,6 +27,7 @@ website_route_rules = [
 	{"from_route": "/restaurant/order", "to_route": "restaurant/order"},
 	{"from_route": "/restaurant/status", "to_route": "restaurant/status"},
 	{"from_route": "/restaurant/qrcodes", "to_route": "restaurant/qrcodes"},
+	{"from_route": "/restaurant/book", "to_route": "restaurant/book"},
 ]
 
 # Guest-facing methods (no login required)
@@ -37,6 +38,9 @@ guest_methods = {
 	"restaurant_management.restaurant_management.guest_api.get_table_qr_data": True,
 	"restaurant_management.restaurant_management.guest_api.add_items_to_order": True,
 	"restaurant_management.restaurant_management.guest_api.confirm_guest_payment": True,
+	"restaurant_management.restaurant_management.guest_api.get_available_slots": True,
+	"restaurant_management.restaurant_management.guest_api.book_table": True,
+	"restaurant_management.restaurant_management.guest_api.get_reservation_status": True,
 }
 
 # Installation

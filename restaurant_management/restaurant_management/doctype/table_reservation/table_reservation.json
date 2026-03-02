@@ -1,0 +1,183 @@
+{
+    "actions": [],
+    "autoname": "format:RES-{####}",
+    "creation": "2026-03-02 16:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "customer_name",
+        "phone",
+        "email",
+        "column_break_1",
+        "guests",
+        "reservation_date",
+        "time_slot",
+        "section_break_table",
+        "table",
+        "table_number",
+        "column_break_2",
+        "status",
+        "section_break_notes",
+        "notes",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "customer_name",
+            "fieldtype": "Data",
+            "label": "Customer Name",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "phone",
+            "fieldtype": "Data",
+            "label": "Phone",
+            "options": "Phone",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "email",
+            "fieldtype": "Data",
+            "label": "Email",
+            "options": "Email"
+        },
+        {
+            "fieldname": "column_break_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "guests",
+            "fieldtype": "Int",
+            "label": "Number of Guests",
+            "reqd": 1,
+            "default": "2",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "reservation_date",
+            "fieldtype": "Date",
+            "label": "Reservation Date",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "time_slot",
+            "fieldtype": "Select",
+            "label": "Time Slot",
+            "options": "11:00 AM - 12:00 PM\n12:00 PM - 01:00 PM\n01:00 PM - 02:00 PM\n02:00 PM - 03:00 PM\n03:00 PM - 04:00 PM\n05:00 PM - 06:00 PM\n06:00 PM - 07:00 PM\n07:00 PM - 08:00 PM\n08:00 PM - 09:00 PM\n09:00 PM - 10:00 PM",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "section_break_table",
+            "fieldtype": "Section Break",
+            "label": "Table Assignment"
+        },
+        {
+            "fieldname": "table",
+            "fieldtype": "Link",
+            "label": "Table",
+            "options": "Restaurant Table",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "table_number",
+            "fieldtype": "Int",
+            "label": "Table Number",
+            "fetch_from": "table.table_number",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Confirmed\nSeated\nCompleted\nCancelled\nNo Show",
+            "default": "Confirmed",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "section_break_notes",
+            "fieldtype": "Section Break",
+            "label": "Additional"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Special Requests"
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "Table Reservation",
+            "print_hide": 1,
+            "read_only": 1,
+            "search_index": 1
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [],
+    "modified": "2026-03-02 16:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Restaurant Management",
+    "name": "Table Reservation",
+    "naming_rule": "Expression",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        },
+        {
+            "read": 1,
+            "role": "All"
+        }
+    ],
+    "sort_field": "reservation_date",
+    "sort_order": "DESC",
+    "states": [
+        {
+            "title": "Confirmed",
+            "color": "blue"
+        },
+        {
+            "title": "Seated",
+            "color": "green"
+        },
+        {
+            "title": "Completed",
+            "color": "green"
+        },
+        {
+            "title": "Cancelled",
+            "color": "red"
+        },
+        {
+            "title": "No Show",
+            "color": "orange"
+        }
+    ],
+    "title_field": "customer_name",
+    "show_title_field_in_link": 1,
+    "track_changes": 1
+}

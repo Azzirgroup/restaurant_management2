@@ -1,0 +1,385 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Book a Table{% endblock %}
+
+{% block page_content %}
+<div id="booking-app">
+    <div id="bk-loading" style="text-align:center;padding:60px 20px;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p style="margin-top:15px;color:#888;">Loading...</p>
+    </div>
+</div>
+
+<style>
+    :root {
+        --bk-primary: #2D3250;
+        --bk-accent: #F6B17A;
+        --bk-bg: #f8f9fa;
+        --bk-success: #7DCE94;
+    }
+
+    .bk-header {
+        background: linear-gradient(135deg, var(--bk-primary), #424769);
+        color: #fff;
+        padding: 24px;
+        text-align: center;
+        border-radius: 0 0 24px 24px;
+        margin: -20px -15px 24px;
+    }
+
+    .bk-header h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .bk-header p {
+        margin: 6px 0 0;
+        opacity: 0.7;
+        font-size: 13px;
+    }
+
+    .bk-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px;
+        margin: 0 10px 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .bk-card h3 {
+        margin: 0 0 14px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--bk-primary);
+    }
+
+    .bk-input-group {
+        margin-bottom: 14px;
+    }
+
+    .bk-input-group label {
+        display: block;
+        font-weight: 600;
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 5px;
+    }
+
+    .bk-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid #eee;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+
+    .bk-input:focus {
+        border-color: var(--bk-accent);
+        outline: none;
+    }
+
+    .bk-row {
+        display: flex;
+        gap: 12px;
+    }
+
+    .bk-row>* {
+        flex: 1;
+    }
+
+    .bk-btn {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--bk-accent), #E8985E);
+        color: var(--bk-primary);
+        border: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .bk-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Slots */
+    .bk-slots {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .bk-slot {
+        padding: 12px;
+        border: 2px solid #eee;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .bk-slot:hover {
+        border-color: var(--bk-accent);
+    }
+
+    .bk-slot.selected {
+        border-color: var(--bk-primary);
+        background: #F0F1F5;
+    }
+
+    .bk-slot-time {
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--bk-primary);
+    }
+
+    .bk-slot-avail {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+    }
+
+    /* Confirmation */
+    .bk-confirm {
+        text-align: center;
+        padding: 20px;
+    }
+
+    .bk-confirm-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .bk-confirm-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--bk-primary);
+    }
+
+    .bk-confirm-detail {
+        margin-top: 15px;
+        text-align: left;
+    }
+
+    .bk-detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f5f5f5;
+        font-size: 14px;
+    }
+
+    .bk-detail-label {
+        color: #888;
+    }
+
+    .bk-detail-value {
+        font-weight: 600;
+        color: var(--bk-primary);
+    }
+
+    .bk-ref {
+        display: inline-block;
+        background: var(--bk-accent);
+        color: var(--bk-primary);
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+</style>
+
+<script>
+    frappe.ready(function () {
+        let state = { step: 1, date: "", guests: 2, slot: "", slots: [], restaurant: "" };
+
+        renderStep1();
+
+        function renderStep1() {
+            let today = new Date().toISOString().split("T")[0];
+            document.getElementById("booking-app").innerHTML = `
+			<div class="bk-header">
+				<h1>📅 Book a Table</h1>
+				<p>Reserve your table and skip the wait!</p>
+			</div>
+			<div class="bk-card">
+				<h3>📋 Reservation Details</h3>
+				<div class="bk-row">
+					<div class="bk-input-group">
+						<label>Date</label>
+						<input type="date" class="bk-input" id="bk-date" min="${today}" value="${state.date || today}">
+					</div>
+					<div class="bk-input-group">
+						<label>Guests</label>
+						<select class="bk-input" id="bk-guests">
+							${[1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map(n =>
+                `<option value="${n}" ${n == state.guests ? "selected" : ""}>${n} ${n === 1 ? "Guest" : "Guests"}</option>`
+            ).join("")}
+						</select>
+					</div>
+				</div>
+				<button class="bk-btn" id="bk-check">🔍 Check Availability</button>
+			</div>
+		`;
+            document.getElementById("bk-check").addEventListener("click", checkSlots);
+        }
+
+        function checkSlots() {
+            state.date = document.getElementById("bk-date").value;
+            state.guests = document.getElementById("bk-guests").value;
+            if (!state.date) return;
+
+            let btn = document.getElementById("bk-check");
+            btn.disabled = true;
+            btn.textContent = "Checking...";
+
+            frappe.call({
+                method: "restaurant_management.restaurant_management.guest_api.get_available_slots",
+                args: { date: state.date, guests: state.guests },
+                callback: function (r) {
+                    if (r.message) {
+                        state.slots = r.message.slots;
+                        state.restaurant = r.message.restaurant_name;
+                        renderStep2(r.message);
+                    }
+                },
+                error: function () { btn.disabled = false; btn.textContent = "🔍 Check Availability"; }
+            });
+        }
+
+        function renderStep2(data) {
+            let dateStr = new Date(state.date + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+            let html = `
+			<div class="bk-header">
+				<h1>📅 ${data.restaurant_name}</h1>
+				<p>${dateStr} · ${state.guests} Guest${state.guests > 1 ? "s" : ""}</p>
+			</div>
+		`;
+
+            if (data.slots.length === 0) {
+                html += `
+				<div class="bk-card" style="text-align:center;">
+					<p style="font-size:36px;">😔</p>
+					<p style="font-weight:700;color:var(--bk-primary);">No slots available</p>
+					<p style="color:#888;font-size:13px;">Try a different date or fewer guests.</p>
+					<button class="bk-btn" style="margin-top:15px;" onclick="location.reload()">← Change Date</button>
+				</div>
+			`;
+            } else {
+                html += `
+				<div class="bk-card">
+					<h3>⏰ Available Time Slots</h3>
+					<div class="bk-slots" id="bk-slots">
+						${data.slots.map(s => `
+							<div class="bk-slot" data-slot="${s.time_slot}">
+								<div class="bk-slot-time">${s.time_slot}</div>
+								<div class="bk-slot-avail">${s.available_tables} table${s.available_tables > 1 ? "s" : ""} left</div>
+							</div>
+						`).join("")}
+					</div>
+				</div>
+				<div class="bk-card" id="bk-form-card" style="display:none;">
+					<h3>👤 Your Details</h3>
+					<div class="bk-input-group">
+						<label>Name *</label>
+						<input type="text" class="bk-input" id="bk-name" placeholder="Your name">
+					</div>
+					<div class="bk-input-group">
+						<label>Phone *</label>
+						<input type="tel" class="bk-input" id="bk-phone" placeholder="Phone number">
+					</div>
+					<div class="bk-input-group">
+						<label>Email (optional)</label>
+						<input type="email" class="bk-input" id="bk-email" placeholder="Email">
+					</div>
+					<div class="bk-input-group">
+						<label>Special Requests</label>
+						<textarea class="bk-input" id="bk-notes" rows="2" placeholder="Birthday, high chair, etc." style="resize:none;"></textarea>
+					</div>
+					<button class="bk-btn" id="bk-confirm-btn">✅ Confirm Booking</button>
+				</div>
+				<button class="bk-btn" style="margin:0 10px;background:#eee;color:var(--bk-primary);" onclick="location.reload()">← Back</button>
+			`;
+            }
+
+            document.getElementById("booking-app").innerHTML = html;
+
+            // Bind slot selection
+            document.querySelectorAll(".bk-slot").forEach(el => {
+                el.addEventListener("click", function () {
+                    document.querySelectorAll(".bk-slot").forEach(s => s.classList.remove("selected"));
+                    this.classList.add("selected");
+                    state.slot = this.dataset.slot;
+                    document.getElementById("bk-form-card").style.display = "block";
+                });
+            });
+
+            // Bind confirm
+            let confirmBtn = document.getElementById("bk-confirm-btn");
+            if (confirmBtn) confirmBtn.addEventListener("click", bookTable);
+        }
+
+        function bookTable() {
+            let name = document.getElementById("bk-name").value.trim();
+            let phone = document.getElementById("bk-phone").value.trim();
+            if (!name || !phone || !state.slot) {
+                frappe.show_alert({ message: "Please fill name, phone and select a slot", indicator: "red" });
+                return;
+            }
+
+            let btn = document.getElementById("bk-confirm-btn");
+            btn.disabled = true;
+            btn.textContent = "Booking...";
+
+            frappe.call({
+                method: "restaurant_management.restaurant_management.guest_api.book_table",
+                args: {
+                    date: state.date,
+                    time_slot: state.slot,
+                    guests: state.guests,
+                    customer_name: name,
+                    phone: phone,
+                    email: document.getElementById("bk-email").value || "",
+                    notes: document.getElementById("bk-notes").value || "",
+                },
+                callback: function (r) {
+                    if (r.message && r.message.status === "success") renderConfirmation(r.message);
+                },
+                error: function () { btn.disabled = false; btn.textContent = "✅ Confirm Booking"; }
+            });
+        }
+
+        function renderConfirmation(data) {
+            let dateStr = new Date(data.date + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+            document.getElementById("booking-app").innerHTML = `
+			<div class="bk-header">
+				<h1>🍽️ ${data.restaurant_name}</h1>
+				<p>Reservation Confirmed!</p>
+			</div>
+			<div class="bk-card">
+				<div class="bk-confirm">
+					<div class="bk-confirm-icon">🎉</div>
+					<div class="bk-confirm-title">Booking Confirmed!</div>
+					<div class="bk-ref">${data.reservation_id}</div>
+					<div class="bk-confirm-detail">
+						<div class="bk-detail-row"><span class="bk-detail-label">📅 Date</span><span class="bk-detail-value">${dateStr}</span></div>
+						<div class="bk-detail-row"><span class="bk-detail-label">⏰ Time</span><span class="bk-detail-value">${data.time_slot}</span></div>
+						<div class="bk-detail-row"><span class="bk-detail-label">👥 Guests</span><span class="bk-detail-value">${data.guests}</span></div>
+						<div class="bk-detail-row"><span class="bk-detail-label">🪑 Table</span><span class="bk-detail-value">Table ${data.table_number} (${data.seating_capacity} seats)</span></div>
+					</div>
+				</div>
+			</div>
+			<button class="bk-btn" style="margin:0 10px;" onclick="location.reload()">📅 Book Another Table</button>
+		`;
+        }
+    });
+</script>
+{% endblock %}

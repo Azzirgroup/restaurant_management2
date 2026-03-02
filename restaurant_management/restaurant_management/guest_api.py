@@ -238,3 +238,182 @@ def get_table_qr_data():
 		})
 
 	return result
+
+
+# ===========================================================
+# TABLE RESERVATION APIs
+# ===========================================================
+
+@frappe.whitelist(allow_guest=True)
+def get_available_slots(date, guests=2):
+	"""Get available time slots for a given date and guest count."""
+	guests = cint(guests) or 2
+
+	if str(date) < str(frappe.utils.today()):
+		frappe.throw(_("Cannot check availability for past dates"))
+
+	settings = frappe.get_single("Restaurant Settings")
+
+	# All time slots
+	all_slots = [
+		"11:00 AM - 12:00 PM",
+		"12:00 PM - 01:00 PM",
+		"01:00 PM - 02:00 PM",
+		"02:00 PM - 03:00 PM",
+		"03:00 PM - 04:00 PM",
+		"05:00 PM - 06:00 PM",
+		"06:00 PM - 07:00 PM",
+		"07:00 PM - 08:00 PM",
+		"08:00 PM - 09:00 PM",
+		"09:00 PM - 10:00 PM",
+	]
+
+	# Get all tables that fit the guest count
+	tables = frappe.get_all(
+		"Restaurant Table",
+		filters={"seating_capacity": [">=", guests]},
+		fields=["name", "table_number", "seating_capacity"],
+		order_by="seating_capacity asc, table_number asc",
+	)
+
+	if not tables:
+		return {
+			"restaurant_name": settings.restaurant_name,
+			"date": date,
+			"guests": guests,
+			"slots": [],
+			"message": _("No tables available for {0} guests").format(guests),
+		}
+
+	table_names = [t.name for t in tables]
+
+	# Get existing reservations for the date
+	existing = frappe.get_all(
+		"Table Reservation",
+		filters={
+			"reservation_date": date,
+			"status": ["in", ["Confirmed", "Seated"]],
+			"table": ["in", table_names],
+		},
+		fields=["table", "time_slot"],
+	)
+
+	# Map: slot → set of booked tables
+	booked = {}
+	for res in existing:
+		booked.setdefault(res.time_slot, set()).add(res.table)
+
+	# Build slots with availability
+	result_slots = []
+	for slot in all_slots:
+		booked_tables = booked.get(slot, set())
+		available_tables = [t for t in tables if t.name not in booked_tables]
+		if available_tables:
+			result_slots.append({
+				"time_slot": slot,
+				"available_tables": len(available_tables),
+				"total_tables": len(tables),
+			})
+
+	return {
+		"restaurant_name": settings.restaurant_name,
+		"date": date,
+		"guests": guests,
+		"slots": result_slots,
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def book_table(date, time_slot, guests, customer_name, phone, email=None, notes=None):
+	"""Book a table — auto-assigns the best-fit available table."""
+	guests = cint(guests) or 2
+
+	if str(date) < str(frappe.utils.today()):
+		frappe.throw(_("Cannot book for past dates"))
+
+	# Find available tables for this slot
+	tables = frappe.get_all(
+		"Restaurant Table",
+		filters={"seating_capacity": [">=", guests]},
+		fields=["name", "table_number", "seating_capacity"],
+		order_by="seating_capacity asc, table_number asc",
+	)
+
+	# Filter out already-booked tables for this slot
+	existing = frappe.get_all(
+		"Table Reservation",
+		filters={
+			"reservation_date": date,
+			"time_slot": time_slot,
+			"status": ["in", ["Confirmed", "Seated"]],
+		},
+		pluck="table",
+	)
+
+	available = [t for t in tables if t.name not in existing]
+	if not available:
+		frappe.throw(_("No tables available for {0} guests at {1} on {2}").format(
+			guests, time_slot, date
+		))
+
+	# Pick the smallest available table (best fit)
+	chosen = available[0]
+
+	res = frappe.get_doc({
+		"doctype": "Table Reservation",
+		"customer_name": customer_name,
+		"phone": phone,
+		"email": email,
+		"guests": guests,
+		"reservation_date": date,
+		"time_slot": time_slot,
+		"table": chosen.name,
+		"notes": notes,
+		"status": "Confirmed",
+	})
+	res.insert(ignore_permissions=True)
+
+	settings = frappe.get_single("Restaurant Settings")
+
+	return {
+		"status": "success",
+		"reservation_id": res.name,
+		"table_number": chosen.table_number,
+		"seating_capacity": chosen.seating_capacity,
+		"date": date,
+		"time_slot": time_slot,
+		"guests": guests,
+		"restaurant_name": settings.restaurant_name,
+	}
+
+
+@frappe.whitelist(allow_guest=True)
+def get_reservation_status(reservation_id):
+	"""Get reservation details for guest tracking."""
+	res = frappe.db.get_value(
+		"Table Reservation", reservation_id,
+		["name", "customer_name", "phone", "guests", "reservation_date",
+		 "time_slot", "table", "table_number", "status", "notes"],
+		as_dict=True,
+	)
+
+	if not res:
+		frappe.throw(_("Reservation not found"))
+
+	settings = frappe.get_single("Restaurant Settings")
+
+	return {
+		"reservation": {
+			"id": res.name,
+			"customer_name": res.customer_name,
+			"guests": res.guests,
+			"date": str(res.reservation_date),
+			"time_slot": res.time_slot,
+			"table_number": res.table_number,
+			"status": res.status,
+			"notes": res.notes,
+		},
+		"restaurant_name": settings.restaurant_name,
+		"address": settings.address,
+	}
+
