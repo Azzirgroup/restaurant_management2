@@ -93,6 +93,13 @@ class RestaurantOrder(Document):
 		if self.order_type == "Dine In" and self.table:
 			self.free_table()
 
+	def collect_payment(self, payment_mode="Cash"):
+		"""Mark order as paid and set payment details."""
+		self.payment_status = "Paid"
+		self.payment_mode = payment_mode
+		self.paid_amount = self.total_amount
+		self.save(ignore_permissions=True)
+
 	def create_sales_invoice(self):
 		"""Create a Sales Invoice from this restaurant order."""
 		try:
@@ -187,4 +194,3 @@ class RestaurantOrder(Document):
 			return customer.name
 		except Exception:
 			return None
-

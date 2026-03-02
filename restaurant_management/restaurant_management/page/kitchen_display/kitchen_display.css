@@ -215,10 +215,52 @@
 }
 
 /* ===== Order Timer ===== */
-.kds-order-timer {
+.kds-order-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     padding: 0 16px 10px;
+}
+
+.kds-order-timer {
     font-size: 14px;
     font-weight: 600;
+}
+
+.kds-status-badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.status-new {
+    background: rgba(125, 206, 148, 0.2);
+    color: #7DCE94;
+}
+
+.status-preparing {
+    background: rgba(255, 165, 0, 0.2);
+    color: #FFA500;
+    animation: blinkPreparing 1.5s infinite;
+}
+
+@keyframes blinkPreparing {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.is-preparing {
+    border-left-color: #FFA500 !important;
 }
 
 .urgency-normal .kds-order-timer {
@@ -311,6 +353,26 @@
 .btn-kds-done:active {
     transform: translateY(0);
 }
+
+.btn-kds-start {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #FFA500, #FF8C00);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+.btn-kds-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
+}
+
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {

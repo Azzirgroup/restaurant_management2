@@ -110,6 +110,48 @@ def cancel_order(order_name):
 
 
 @frappe.whitelist()
+def update_order_status(order_name, status):
+	"""Update order status — used by Kitchen Display and Captain."""
+	allowed = ["In Progress", "Preparing", "Ready", "Served", "Completed", "Cancelled"]
+	if status not in allowed:
+		frappe.throw(_("Invalid status: {0}").format(status))
+
+	order = frappe.get_doc("Restaurant Order", order_name)
+	order.status = status
+	order.save(ignore_permissions=True)
+
+	status_labels = {
+		"Preparing": "🔥 Now preparing",
+		"Ready": "✅ Ready to serve",
+		"Served": "🍽️ Served",
+		"Completed": "✔️ Completed",
+		"Cancelled": "❌ Cancelled",
+	}
+	label = status_labels.get(status, status)
+	return {"status": "success", "message": _("{0}: {1}").format(label, order_name)}
+
+
+@frappe.whitelist()
+def collect_payment(order_name, payment_mode="Cash"):
+	"""Collect payment for an order."""
+	order = frappe.get_doc("Restaurant Order", order_name)
+	if order.payment_status == "Paid":
+		frappe.throw(_("Payment already collected for this order"))
+
+	order.payment_status = "Paid"
+	order.payment_mode = payment_mode
+	order.paid_amount = order.total_amount
+	order.save(ignore_permissions=True)
+
+	return {
+		"status": "success",
+		"message": _("Payment of {0} collected via {1}").format(
+			order.total_amount, payment_mode
+		),
+	}
+
+
+@frappe.whitelist()
 def clear_table(table_name):
 	"""Clear a table — complete its current order and free it."""
 	table = frappe.get_doc("Restaurant Table", table_name)
@@ -466,8 +508,8 @@ def get_kitchen_orders():
 	"""Get all active (In Progress) orders for the kitchen display."""
 	orders = frappe.get_all(
 		"Restaurant Order",
-		filters={"status": "In Progress"},
-		fields=["name", "order_type", "table", "order_date", "notes", "total_amount"],
+		filters={"status": ["in", ["In Progress", "Preparing"]]},
+		fields=["name", "order_type", "table", "order_date", "notes", "total_amount", "status"],
 		order_by="order_date asc",
 	)
 
@@ -494,6 +536,7 @@ def get_kitchen_orders():
 			"order_date": str(order.order_date),
 			"notes": order.notes,
 			"total_amount": order.total_amount,
+			"status": order.status,
 			"items": items,
 		})
 

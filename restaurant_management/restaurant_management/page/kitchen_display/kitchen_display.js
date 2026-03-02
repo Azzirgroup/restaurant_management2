@@ -49,7 +49,6 @@ class KitchenDisplay {
     }
 
     start_auto_refresh() {
-        // Refresh every 10 seconds
         this.refresh_interval = setInterval(() => {
             this.load_orders();
         }, 10000);
@@ -106,33 +105,65 @@ class KitchenDisplay {
                 table_badge = `<span class="kds-table-badge parcel">📦 PARCEL</span>`;
             }
 
+            // Status badge
+            let status_badge = "";
+            if (order.status === "In Progress") {
+                status_badge = `<span class="kds-status-badge status-new">🆕 NEW</span>`;
+            } else if (order.status === "Preparing") {
+                status_badge = `<span class="kds-status-badge status-preparing">🔥 PREPARING</span>`;
+            }
+
+            // Action buttons based on status
+            let action_buttons = "";
+            if (order.status === "In Progress") {
+                action_buttons = `
+					<button class="btn btn-kds-start" data-order="${order.name}">
+						<i class="fa fa-fire"></i> Start Preparing
+					</button>
+				`;
+            } else if (order.status === "Preparing") {
+                action_buttons = `
+					<button class="btn btn-kds-done" data-order="${order.name}">
+						<i class="fa fa-check"></i> Ready to Serve
+					</button>
+				`;
+            }
+
             $container.append(`
-				<div class="kds-order-card ${urgency_class}" data-order="${order.name}">
+				<div class="kds-order-card ${urgency_class} ${order.status === 'Preparing' ? 'is-preparing' : ''}" data-order="${order.name}">
 					<div class="kds-order-header">
 						<div class="kds-order-id">${order.name}</div>
 						${table_badge}
 					</div>
-					<div class="kds-order-timer">
-						<i class="fa fa-clock"></i> ${elapsed.display}
+					<div class="kds-order-meta">
+						${status_badge}
+						<div class="kds-order-timer">
+							<i class="fa fa-clock"></i> ${elapsed.display}
+						</div>
 					</div>
 					<div class="kds-order-items">
 						${items_html}
 					</div>
 					${order.notes ? `<div class="kds-order-notes"><i class="fa fa-sticky-note"></i> ${order.notes}</div>` : ""}
 					<div class="kds-order-actions">
-						<button class="btn btn-kds-done" data-order="${order.name}">
-							<i class="fa fa-check"></i> Done
-						</button>
+						${action_buttons}
 					</div>
 				</div>
 			`);
         });
 
-        // Bind done buttons
+        // Bind "Start Preparing" buttons
+        $container.find(".btn-kds-start").on("click", (e) => {
+            e.stopPropagation();
+            let order_name = $(e.currentTarget).data("order");
+            this.start_preparing(order_name);
+        });
+
+        // Bind "Ready to Serve" buttons
         $container.find(".btn-kds-done").on("click", (e) => {
             e.stopPropagation();
             let order_name = $(e.currentTarget).data("order");
-            this.mark_done(order_name);
+            this.mark_ready(order_name);
         });
     }
 
@@ -161,13 +192,28 @@ class KitchenDisplay {
         return "urgency-normal";
     }
 
-    mark_done(order_name) {
+    start_preparing(order_name) {
         frappe.call({
-            method: "restaurant_management.restaurant_management.api.complete_order",
-            args: { order_name: order_name },
+            method: "restaurant_management.restaurant_management.api.update_order_status",
+            args: { order_name: order_name, status: "Preparing" },
             callback: (r) => {
                 if (r.message && r.message.status === "success") {
-                    // Animate removal
+                    frappe.show_alert({
+                        message: __("Now preparing {0}", [order_name]),
+                        indicator: "yellow",
+                    });
+                    this.load_orders();
+                }
+            },
+        });
+    }
+
+    mark_ready(order_name) {
+        frappe.call({
+            method: "restaurant_management.restaurant_management.api.update_order_status",
+            args: { order_name: order_name, status: "Ready" },
+            callback: (r) => {
+                if (r.message && r.message.status === "success") {
                     $(`.kds-order-card[data-order="${order_name}"]`)
                         .addClass("kds-done-animation")
                         .fadeOut(500, () => {
@@ -175,7 +221,7 @@ class KitchenDisplay {
                         });
 
                     frappe.show_alert({
-                        message: __("Order {0} completed!", [order_name]),
+                        message: __("Order {0} is ready to serve! 🔔", [order_name]),
                         indicator: "green",
                     });
                 }
