@@ -109,13 +109,22 @@ class RestaurantOrder(Document):
 				"Company", company, "default_income_account"
 			)
 
+			# Resolve customer — use existing or default walk-in customer
+			customer = self._get_or_create_customer(company)
+			if not customer:
+				frappe.log_error(
+					"Cannot create Sales Invoice: No customer found",
+					"Restaurant Order"
+				)
+				return
+
 			si = frappe.get_doc({
 				"doctype": "Sales Invoice",
 				"company": company,
-				"customer": self.customer_name or "Walk In Customer",
+				"customer": customer,
 				"posting_date": frappe.utils.today(),
 				"due_date": frappe.utils.today(),
-				"is_pos": 1,
+				"is_pos": 0,
 				"update_stock": 0,
 			})
 
@@ -129,6 +138,7 @@ class RestaurantOrder(Document):
 					"income_account": default_income_account,
 				})
 
+			si.flags.ignore_mandatory = True
 			si.insert(ignore_permissions=True)
 			si.submit()
 
@@ -150,3 +160,31 @@ class RestaurantOrder(Document):
 				alert=True,
 				indicator="orange",
 			)
+
+	def _get_or_create_customer(self, company):
+		"""Get or create a customer for the invoice."""
+		# If a customer name was provided, try to find a matching Customer
+		if self.customer_name:
+			customer = frappe.db.get_value("Customer", {"customer_name": self.customer_name})
+			if customer:
+				return customer
+
+		# Try common walk-in customer names
+		for walk_in_name in ["Walk In Customer", "Walk-in Customer", "Guest", "Cash Customer"]:
+			if frappe.db.exists("Customer", walk_in_name):
+				return walk_in_name
+
+		# Create a default walk-in customer if none exists
+		try:
+			customer = frappe.get_doc({
+				"doctype": "Customer",
+				"customer_name": "Walk In Customer",
+				"customer_type": "Individual",
+				"customer_group": frappe.db.get_single_value("Selling Settings", "customer_group") or "All Customer Groups",
+				"territory": frappe.db.get_single_value("Selling Settings", "territory") or "All Territories",
+			})
+			customer.insert(ignore_permissions=True)
+			return customer.name
+		except Exception:
+			return None
+
