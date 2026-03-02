@@ -1,0 +1,554 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Order Now{% endblock %}
+
+{% block page_content %}
+<div id="guest-order-app" data-table="{{ table }}">
+    <!-- Loading -->
+    <div id="go-loading" style="text-align:center;padding:60px 20px;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p style="margin-top:15px;color:#888;">Loading menu...</p>
+    </div>
+</div>
+
+<style>
+    :root {
+        --go-primary: #2D3250;
+        --go-accent: #F6B17A;
+        --go-accent-dark: #E8985E;
+        --go-bg: #f8f9fa;
+        --go-card: #fff;
+        --go-text: #333;
+        --go-muted: #888;
+        --go-success: #7DCE94;
+        --go-radius: 14px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .go-header {
+        background: linear-gradient(135deg, var(--go-primary), #424769);
+        color: #fff;
+        padding: 20px 24px;
+        text-align: center;
+        border-radius: 0 0 24px 24px;
+        margin: -20px -15px 20px;
+    }
+
+    .go-header h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .go-header p {
+        margin: 5px 0 0;
+        opacity: 0.7;
+        font-size: 13px;
+    }
+
+    .go-table-badge {
+        display: inline-block;
+        background: var(--go-accent);
+        color: var(--go-primary);
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    /* Categories */
+    .go-categories {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 0 5px 15px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .go-cat-btn {
+        padding: 8px 18px;
+        border-radius: 25px;
+        border: 2px solid #eee;
+        background: #fff;
+        color: var(--go-muted);
+        font-weight: 600;
+        font-size: 13px;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .go-cat-btn.active {
+        background: var(--go-primary);
+        border-color: var(--go-primary);
+        color: #fff;
+    }
+
+    /* Menu items */
+    .go-items {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 0 5px;
+    }
+
+    .go-item-card {
+        background: var(--go-card);
+        border-radius: var(--go-radius);
+        padding: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .go-item-card:active {
+        transform: scale(0.97);
+    }
+
+    .go-item-img {
+        width: 100%;
+        height: 90px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #f0f0f0, #e8e8e8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ccc;
+        font-size: 28px;
+        margin-bottom: 10px;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .go-item-name {
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--go-text);
+    }
+
+    .go-item-price {
+        font-weight: 800;
+        font-size: 15px;
+        color: var(--go-primary);
+        margin-top: 4px;
+    }
+
+    .go-item-add {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--go-accent);
+        color: var(--go-primary);
+        border: none;
+        font-weight: bold;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Cart */
+    .go-cart-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--go-primary);
+        color: #fff;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s;
+    }
+
+    .go-cart-bar.hidden {
+        transform: translateY(100%);
+    }
+
+    .go-cart-info {
+        font-size: 14px;
+    }
+
+    .go-cart-info strong {
+        font-size: 17px;
+    }
+
+    .go-cart-btn {
+        padding: 10px 24px;
+        background: var(--go-accent);
+        color: var(--go-primary);
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    /* Cart panel */
+    .go-cart-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        padding: 24px 20px;
+        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+        z-index: 1001;
+        max-height: 80vh;
+        overflow-y: auto;
+        transform: translateY(100%);
+        transition: transform 0.3s;
+    }
+
+    .go-cart-panel.open {
+        transform: translateY(0);
+    }
+
+    .go-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+
+    .go-overlay.open {
+        display: block;
+    }
+
+    .go-cart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .go-cart-header h3 {
+        margin: 0;
+        font-weight: 800;
+    }
+
+    .go-cart-close {
+        background: none;
+        border: none;
+        font-size: 22px;
+        cursor: pointer;
+        color: #888;
+    }
+
+    .go-cart-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+        gap: 12px;
+    }
+
+    .go-cart-item-name {
+        flex: 1;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .go-cart-item-qty {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .go-qty-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 2px solid #eee;
+        background: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .go-cart-item-total {
+        font-weight: 700;
+        color: var(--go-primary);
+        min-width: 60px;
+        text-align: right;
+    }
+
+    .go-cart-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+        font-size: 18px;
+        font-weight: 800;
+        border-top: 2px solid var(--go-primary);
+        margin-top: 10px;
+    }
+
+    /* Customer name input */
+    .go-customer-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid #eee;
+        border-radius: 10px;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .go-place-order {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, var(--go-accent), var(--go-accent-dark));
+        color: var(--go-primary);
+        border: none;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .go-place-order:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Spacer for cart bar */
+    .go-spacer {
+        height: 80px;
+    }
+
+    @media (min-width: 600px) {
+        .go-items {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+</style>
+
+<script>
+    frappe.ready(function () {
+        const table = document.getElementById("guest-order-app").dataset.table;
+        let cart = {};
+        let menuData = {};
+        let currency = "₹";
+        let cartOpen = false;
+
+        // Load menu
+        frappe.call({
+            method: "restaurant_management.restaurant_management.guest_api.get_guest_menu",
+            args: { table: table || "" },
+            callback: function (r) {
+                if (r.message) {
+                    currency = r.message.currency_symbol;
+                    menuData = r.message.menu;
+                    renderApp(r.message);
+                }
+            }
+        });
+
+        function renderApp(data) {
+            let categories = Object.keys(data.menu);
+            let tableInfo = data.table;
+
+            let html = `
+			<div class="go-header">
+				<h1>🍽️ ${data.restaurant_name}</h1>
+				<p>${data.address || "Welcome! Browse our menu & order"}</p>
+				${tableInfo ? `<div class="go-table-badge">🪑 Table ${tableInfo.table_number}</div>` : ""}
+			</div>
+
+			<div class="go-categories" id="go-categories">
+				${categories.map((c, i) => `<button class="go-cat-btn ${i === 0 ? 'active' : ''}" data-cat="${c}">${c}</button>`).join("")}
+			</div>
+
+			<div class="go-items" id="go-items"></div>
+
+			<div class="go-spacer"></div>
+
+			<div class="go-cart-bar hidden" id="go-cart-bar">
+				<div class="go-cart-info">
+					<span id="go-cart-count">0 items</span> •
+					<strong id="go-cart-total">${currency}0</strong>
+				</div>
+				<button class="go-cart-btn" id="go-view-cart">View Cart →</button>
+			</div>
+
+			<div class="go-overlay" id="go-overlay"></div>
+			<div class="go-cart-panel" id="go-cart-panel">
+				<div class="go-cart-header">
+					<h3>🛒 Your Order</h3>
+					<button class="go-cart-close" id="go-cart-close">✕</button>
+				</div>
+				<div id="go-cart-items"></div>
+				<div class="go-cart-total">
+					<span>Total</span>
+					<span id="go-panel-total">${currency}0</span>
+				</div>
+				<input type="text" class="go-customer-input" id="go-customer-name" placeholder="Your name (optional)">
+				<textarea class="go-customer-input" id="go-notes" placeholder="Special instructions (optional)" rows="2" style="resize:none;"></textarea>
+				<button class="go-place-order" id="go-place-btn">Place Order</button>
+			</div>
+		`;
+            document.getElementById("go-loading").remove();
+            document.getElementById("guest-order-app").innerHTML = html;
+
+            // Render first category
+            if (categories.length) renderItems(categories[0]);
+
+            // Category clicks
+            document.querySelectorAll(".go-cat-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    document.querySelectorAll(".go-cat-btn").forEach(b => b.classList.remove("active"));
+                    this.classList.add("active");
+                    renderItems(this.dataset.cat);
+                });
+            });
+
+            // Cart bar click
+            document.getElementById("go-view-cart").addEventListener("click", toggleCart);
+            document.getElementById("go-cart-close").addEventListener("click", toggleCart);
+            document.getElementById("go-overlay").addEventListener("click", toggleCart);
+
+            // Place order
+            document.getElementById("go-place-btn").addEventListener("click", placeOrder);
+        }
+
+        function renderItems(category) {
+            let items = menuData[category] || [];
+            let container = document.getElementById("go-items");
+            container.innerHTML = items.map(item => `
+			<div class="go-item-card" data-item="${item.name}" data-name="${item.item_name}" data-price="${item.price}">
+				<div class="go-item-img" ${item.image ? `style="background-image:url(${item.image})"` : ""}>
+					${!item.image ? "🍽️" : ""}
+				</div>
+				<div class="go-item-name">${item.item_name}</div>
+				<div class="go-item-price">${currency}${parseFloat(item.price).toFixed(2)}</div>
+				<button class="go-item-add">+</button>
+			</div>
+		`).join("");
+
+            // Add click handlers
+            container.querySelectorAll(".go-item-card").forEach(card => {
+                card.addEventListener("click", function () {
+                    addToCart(this.dataset.item, this.dataset.name, parseFloat(this.dataset.price));
+                });
+            });
+        }
+
+        function addToCart(id, name, price) {
+            if (cart[id]) {
+                cart[id].qty += 1;
+            } else {
+                cart[id] = { menu_item: id, name: name, price: price, qty: 1 };
+            }
+            updateCartUI();
+            // Quick feedback
+            frappe.show_alert({ message: `${name} added`, indicator: "green" });
+        }
+
+        function updateCartUI() {
+            let items = Object.values(cart);
+            let totalQty = items.reduce((s, i) => s + i.qty, 0);
+            let totalAmt = items.reduce((s, i) => s + (i.price * i.qty), 0);
+
+            let bar = document.getElementById("go-cart-bar");
+            if (totalQty > 0) {
+                bar.classList.remove("hidden");
+            } else {
+                bar.classList.add("hidden");
+            }
+
+            document.getElementById("go-cart-count").textContent = `${totalQty} item${totalQty !== 1 ? 's' : ''}`;
+            document.getElementById("go-cart-total").textContent = `${currency}${totalAmt.toFixed(2)}`;
+            document.getElementById("go-panel-total").textContent = `${currency}${totalAmt.toFixed(2)}`;
+
+            // Render cart items in panel
+            let cartContainer = document.getElementById("go-cart-items");
+            cartContainer.innerHTML = items.map(item => `
+			<div class="go-cart-item" data-id="${item.menu_item}">
+				<div class="go-cart-item-name">${item.name}</div>
+				<div class="go-cart-item-qty">
+					<button class="go-qty-btn go-minus" data-id="${item.menu_item}">−</button>
+					<span>${item.qty}</span>
+					<button class="go-qty-btn go-plus" data-id="${item.menu_item}">+</button>
+				</div>
+				<div class="go-cart-item-total">${currency}${(item.price * item.qty).toFixed(2)}</div>
+			</div>
+		`).join("");
+
+            // Bind +/- buttons
+            cartContainer.querySelectorAll(".go-minus").forEach(btn => {
+                btn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    let id = this.dataset.id;
+                    cart[id].qty -= 1;
+                    if (cart[id].qty <= 0) delete cart[id];
+                    updateCartUI();
+                });
+            });
+            cartContainer.querySelectorAll(".go-plus").forEach(btn => {
+                btn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    cart[this.dataset.id].qty += 1;
+                    updateCartUI();
+                });
+            });
+        }
+
+        function toggleCart() {
+            cartOpen = !cartOpen;
+            document.getElementById("go-cart-panel").classList.toggle("open", cartOpen);
+            document.getElementById("go-overlay").classList.toggle("open", cartOpen);
+        }
+
+        function placeOrder() {
+            let items = Object.values(cart);
+            if (!items.length) return;
+
+            let btn = document.getElementById("go-place-btn");
+            btn.disabled = true;
+            btn.textContent = "Placing order...";
+
+            let orderItems = items.map(i => ({ menu_item: i.menu_item, quantity: i.qty }));
+            let customerName = document.getElementById("go-customer-name").value;
+            let notes = document.getElementById("go-notes").value;
+
+            frappe.call({
+                method: "restaurant_management.restaurant_management.guest_api.place_guest_order",
+                args: {
+                    items: JSON.stringify(orderItems),
+                    table: table || "",
+                    customer_name: customerName,
+                    notes: notes,
+                },
+                callback: function (r) {
+                    if (r.message) {
+                        // Redirect to status page
+                        window.location.href = `/restaurant/status?order=${r.message.order_name}`;
+                    }
+                },
+                error: function () {
+                    btn.disabled = false;
+                    btn.textContent = "Place Order";
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

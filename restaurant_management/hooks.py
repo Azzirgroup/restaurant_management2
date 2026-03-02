@@ -21,9 +21,21 @@ app_include_js = "/assets/restaurant_management/js/restaurant.js"
 # Include css in page
 # page_css = {"page" : "public/css/file.css"}
 
-# Website
+# Website — Public guest ordering pages
 # -------
-website_route_rules = []
+website_route_rules = [
+	{"from_route": "/restaurant/order", "to_route": "restaurant/order"},
+	{"from_route": "/restaurant/status", "to_route": "restaurant/status"},
+	{"from_route": "/restaurant/qrcodes", "to_route": "restaurant/qrcodes"},
+]
+
+# Guest-facing methods (no login required)
+guest_methods = {
+	"restaurant_management.restaurant_management.guest_api.get_guest_menu": True,
+	"restaurant_management.restaurant_management.guest_api.place_guest_order": True,
+	"restaurant_management.restaurant_management.guest_api.get_order_status": True,
+	"restaurant_management.restaurant_management.guest_api.get_table_qr_data": True,
+}
 
 # Installation
 # ------------

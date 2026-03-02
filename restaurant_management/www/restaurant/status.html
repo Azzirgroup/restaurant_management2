@@ -1,0 +1,363 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Order Status{% endblock %}
+
+{% block page_content %}
+<div id="order-status-app" data-order="{{ order_name }}">
+    <div id="os-loading" style="text-align:center;padding:60px 20px;">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p style="margin-top:15px;color:#888;">Loading order status...</p>
+    </div>
+</div>
+
+<style>
+    :root {
+        --os-primary: #2D3250;
+        --os-accent: #F6B17A;
+        --os-bg: #f8f9fa;
+        --os-success: #7DCE94;
+        --os-warning: #FFD93D;
+        --os-info: #64B5F6;
+        --os-purple: #9C6FDE;
+    }
+
+    .os-header {
+        background: linear-gradient(135deg, var(--os-primary), #424769);
+        color: #fff;
+        padding: 24px;
+        text-align: center;
+        border-radius: 0 0 24px 24px;
+        margin: -20px -15px 24px;
+    }
+
+    .os-header h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .os-header .os-order-id {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    /* Status badge */
+    .os-status-big {
+        text-align: center;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .os-status-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+    }
+
+    .os-status-text {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--os-primary);
+    }
+
+    .os-status-sub {
+        color: #888;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    /* Timeline */
+    .os-timeline {
+        padding: 0 20px;
+        margin-bottom: 24px;
+    }
+
+    .os-timeline-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding-bottom: 20px;
+        position: relative;
+    }
+
+    .os-timeline-item:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        left: 13px;
+        top: 30px;
+        bottom: 0;
+        width: 2px;
+        background: #eee;
+    }
+
+    .os-timeline-item.completed:not(:last-child)::after {
+        background: var(--os-success);
+    }
+
+    .os-timeline-item.active:not(:last-child)::after {
+        background: linear-gradient(to bottom, var(--os-accent), #eee);
+    }
+
+    .os-timeline-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+        z-index: 1;
+    }
+
+    .os-timeline-item.completed .os-timeline-dot {
+        background: var(--os-success);
+        color: #fff;
+    }
+
+    .os-timeline-item.active .os-timeline-dot {
+        background: var(--os-accent);
+        color: var(--os-primary);
+        animation: pulseActive 2s infinite;
+    }
+
+    .os-timeline-item.pending .os-timeline-dot {
+        background: #eee;
+        color: #ccc;
+    }
+
+    @keyframes pulseActive {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(246, 177, 122, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 8px rgba(246, 177, 122, 0);
+        }
+    }
+
+    .os-timeline-label {
+        font-weight: 600;
+        font-size: 14px;
+        padding-top: 4px;
+    }
+
+    .os-timeline-item.pending .os-timeline-label {
+        color: #ccc;
+    }
+
+    .os-timeline-item.active .os-timeline-label {
+        color: var(--os-primary);
+        font-weight: 800;
+    }
+
+    .os-timeline-item.completed .os-timeline-label {
+        color: var(--os-success);
+    }
+
+    /* Order items */
+    .os-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 18px;
+        margin: 0 10px 16px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .os-card h3 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--os-primary);
+    }
+
+    .os-item-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f5f5f5;
+        font-size: 14px;
+    }
+
+    .os-item-row:last-child {
+        border-bottom: none;
+    }
+
+    .os-item-qty {
+        color: #888;
+        margin-right: 8px;
+    }
+
+    .os-total-row {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 800;
+        font-size: 16px;
+        padding-top: 10px;
+        margin-top: 8px;
+        border-top: 2px solid var(--os-primary);
+    }
+
+    /* Payment badge */
+    .os-payment-badge {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+    .os-payment-badge.unpaid {
+        background: #FFF3E0;
+        color: #E65100;
+    }
+
+    .os-payment-badge.paid {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+
+    /* New order button */
+    .os-new-order {
+        display: block;
+        width: calc(100% - 20px);
+        margin: 20px 10px;
+        padding: 14px;
+        background: var(--os-primary);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        text-align: center;
+    }
+</style>
+
+<script>
+    frappe.ready(function () {
+        const orderName = document.getElementById("order-status-app").dataset.order;
+
+        if (!orderName) {
+            document.getElementById("order-status-app").innerHTML = `
+			<div style="text-align:center;padding:60px 20px;">
+				<p style="font-size:48px;">😕</p>
+				<h3>No order specified</h3>
+				<p style="color:#888;">Please scan a QR code at your table to place an order.</p>
+			</div>
+		`;
+            return;
+        }
+
+        loadStatus();
+        // Auto-refresh every 8 seconds
+        setInterval(loadStatus, 8000);
+
+        function loadStatus() {
+            frappe.call({
+                method: "restaurant_management.restaurant_management.guest_api.get_order_status",
+                args: { order_name: orderName },
+                callback: function (r) {
+                    if (r.message) renderStatus(r.message);
+                },
+                error: function () {
+                    document.getElementById("order-status-app").innerHTML = `
+					<div style="text-align:center;padding:60px 20px;">
+						<p style="font-size:48px;">😕</p>
+						<h3>Order not found</h3>
+						<p style="color:#888;">This order may have been removed.</p>
+					</div>
+				`;
+                }
+            });
+        }
+
+        function renderStatus(data) {
+            let order = data.order;
+            let statusIcons = {
+                "In Progress": "📝",
+                "Preparing": "🔥",
+                "Ready": "✅",
+                "Served": "🍽️",
+                "Completed": "🎉",
+                "Cancelled": "❌",
+            };
+            let statusMessages = {
+                "In Progress": "Your order has been received!",
+                "Preparing": "The kitchen is preparing your food...",
+                "Ready": "Your order is ready! It will be served shortly.",
+                "Served": "Enjoy your meal! 😋",
+                "Completed": "Thank you for dining with us!",
+                "Cancelled": "This order was cancelled.",
+            };
+
+            let tableInfo = order.table_number ? `Table ${order.table_number}` : "Parcel Order";
+
+            let html = `
+			<div class="os-header">
+				<h1>🍽️ ${data.restaurant_name}</h1>
+				<div class="os-order-id">${order.name} · ${tableInfo}</div>
+			</div>
+
+			<div class="os-status-big">
+				<div class="os-status-icon">${statusIcons[order.status] || "📋"}</div>
+				<div class="os-status-text">${order.status}</div>
+				<div class="os-status-sub">${statusMessages[order.status] || ""}</div>
+			</div>
+		`;
+
+            // Timeline
+            if (order.status !== "Cancelled") {
+                html += `<div class="os-timeline">`;
+                data.timeline.forEach(t => {
+                    let icon = t.state === "completed" ? "✓" : (t.state === "active" ? "●" : "○");
+                    html += `
+					<div class="os-timeline-item ${t.state}">
+						<div class="os-timeline-dot">${icon}</div>
+						<div class="os-timeline-label">${t.status}</div>
+					</div>
+				`;
+                });
+                html += `</div>`;
+            }
+
+            // Order items
+            html += `
+			<div class="os-card">
+				<h3>📦 Order Details</h3>
+				${data.items.map(item => `
+					<div class="os-item-row">
+						<span><span class="os-item-qty">${item.quantity}×</span> ${item.item_name}</span>
+						<span>${data.currency_symbol}${parseFloat(item.amount).toFixed(2)}</span>
+					</div>
+				`).join("")}
+				<div class="os-total-row">
+					<span>Total</span>
+					<span>${data.currency_symbol}${parseFloat(order.total_amount).toFixed(2)}</span>
+				</div>
+				<div style="text-align:center;">
+					<span class="os-payment-badge ${order.payment_status === 'Paid' ? 'paid' : 'unpaid'}">
+						${order.payment_status === 'Paid' ? '✅ Paid' : '⏳ Payment Pending'}
+					</span>
+				</div>
+			</div>
+		`;
+
+            // Order again button for completed orders
+            if (order.status === "Completed") {
+                let baseUrl = window.location.origin;
+                let tableParam = order.table_number ? `?table=${order.table_number}` : "";
+                html += `<a class="os-new-order" href="${baseUrl}/restaurant/order${tableParam}">🍽️ Order Again</a>`;
+            }
+
+            document.getElementById("order-status-app").innerHTML = html;
+        }
+    });
+</script>
+{% endblock %}
