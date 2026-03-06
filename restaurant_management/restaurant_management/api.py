@@ -684,7 +684,7 @@ def get_kitchen_orders():
 		items = frappe.get_all(
 			"Restaurant Order Item",
 			filters={"parent": order.name},
-			fields=["item_name", "quantity"],
+			fields=["name", "item_name", "quantity", "status"],
 			order_by="idx asc",
 		)
 
@@ -707,3 +707,13 @@ def get_kitchen_orders():
 
 	return result
 
+
+@frappe.whitelist()
+def update_item_status(item_name, status):
+	"""Update the status of an individual item in a Restaurant Order."""
+	item = frappe.get_doc("Restaurant Order Item", item_name)
+	item.status = status
+	item.db_update()
+
+	# If all items are prepared, we could optionally update the main order status as well
+	return {"status": "success"}

@@ -88,12 +88,17 @@ class KitchenDisplay {
             let elapsed = this.get_elapsed_time(order.order_date);
             let urgency_class = this.get_urgency_class(elapsed.minutes);
 
-            let items_html = "";
             (order.items || []).forEach((item) => {
+                let is_prepared = item.status === "Prepared";
                 items_html += `
-					<div class="kds-item">
+					<div class="kds-item ${is_prepared ? 'is-prepared' : ''}" 
+                         data-item-name="${item.name}" 
+                         data-order="${order.name}">
 						<span class="kds-item-qty">${item.quantity}×</span>
 						<span class="kds-item-name">${item.item_name}</span>
+                        <div class="kds-item-status">
+                            <i class="fa ${is_prepared ? 'fa-check-circle' : 'fa-circle-o'}"></i>
+                        </div>
 					</div>
 				`;
             });
@@ -164,6 +169,29 @@ class KitchenDisplay {
             e.stopPropagation();
             let order_name = $(e.currentTarget).data("order");
             this.mark_ready(order_name);
+        });
+
+        // Bind item status toggle
+        $container.find(".kds-item").on("click", (e) => {
+            e.stopPropagation();
+            let $item = $(e.currentTarget);
+            let item_name = $item.data("item-name");
+            let is_prepared = $item.hasClass("is-prepared");
+            let new_status = is_prepared ? "Pending" : "Prepared";
+
+            this.toggle_item_status(item_name, new_status);
+        });
+    }
+
+    toggle_item_status(item_name, status) {
+        frappe.call({
+            method: "restaurant_management.restaurant_management.api.update_item_status",
+            args: { item_name: item_name, status: status },
+            callback: (r) => {
+                if (r.message && r.message.status === "success") {
+                    this.load_orders();
+                }
+            },
         });
     }
 

@@ -8,7 +8,8 @@
         "item_name",
         "quantity",
         "rate",
-        "amount"
+        "amount",
+        "status"
     ],
     "fields": [
         {
@@ -47,6 +48,14 @@
             "fieldtype": "Currency",
             "label": "Amount",
             "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Pending\nPrepared",
+            "default": "Pending",
             "in_list_view": 1
         }
     ],

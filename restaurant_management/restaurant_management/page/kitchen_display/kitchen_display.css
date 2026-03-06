@@ -307,6 +307,35 @@
     color: #fff;
     font-size: 15px;
     font-weight: 500;
+    flex: 1;
+}
+
+.kds-item-status {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.kds-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kds-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.kds-item.is-prepared .kds-item-name {
+    text-decoration: line-through;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.kds-item.is-prepared .kds-item-qty {
+    opacity: 0.5;
+}
+
+.kds-item.is-prepared .kds-item-status {
+    color: #7DCE94;
 }
 
 /* ===== Order Notes ===== */
