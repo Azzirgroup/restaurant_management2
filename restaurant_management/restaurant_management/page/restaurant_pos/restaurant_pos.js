@@ -94,6 +94,33 @@ class RestaurantPOS {
 	}
 
 	/* ─────────────────────────────
+	   FULLSCREEN TOGGLE
+	───────────────────────────── */
+	_toggle_fullscreen() {
+		const elem = document.documentElement;
+		
+		if (!document.fullscreenElement) {
+			// Enter fullscreen
+			if (elem.requestFullscreen) {
+				elem.requestFullscreen();
+			} else if (elem.webkitRequestFullscreen) { /* Safari */
+				elem.webkitRequestFullscreen();
+			} else if (elem.msRequestFullscreen) { /* IE11 */
+				elem.msRequestFullscreen();
+			}
+		} else {
+			// Exit fullscreen
+			if (document.exitFullscreen) {
+				document.exitFullscreen();
+			} else if (document.webkitExitFullscreen) { /* Safari */
+				document.webkitExitFullscreen();
+			} else if (document.msExitFullscreen) { /* IE11 */
+				document.msExitFullscreen();
+			}
+		}
+	}
+
+	/* ─────────────────────────────
 	   TAB NAVIGATION
 	───────────────────────────── */
 	_setup_tabs() {
@@ -162,6 +189,9 @@ class RestaurantPOS {
 
 		// Refresh orders
 		$(document).on("click", "#btn-refresh-orders", () => this.load_orders());
+
+		// Fullscreen toggle
+		$(document).on("click", "#rpos-fullscreen-btn", () => this._toggle_fullscreen());
 	}
 
 	/* ─────────────────────────────

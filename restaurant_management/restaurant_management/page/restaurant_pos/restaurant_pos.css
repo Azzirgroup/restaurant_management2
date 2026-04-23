@@ -282,6 +282,38 @@
 	white-space: nowrap;
 }
 
+/* ── Fullscreen Toggle Button ── */
+.rpos-fullscreen-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	background: var(--rp-surface-2);
+	border: 1.5px solid var(--rp-border);
+	border-radius: var(--rp-radius-sm);
+	color: var(--rp-text-secondary);
+	cursor: pointer;
+	transition: var(--rp-transition);
+	margin-left: 8px;
+}
+
+.rpos-fullscreen-btn:hover {
+	border-color: var(--rp-accent);
+	color: var(--rp-accent);
+	background: var(--rp-accent-soft);
+	transform: translateY(-1px);
+}
+
+.rpos-fullscreen-btn:active {
+	transform: translateY(0);
+}
+
+.rpos-fullscreen-btn svg {
+	width: 16px;
+	height: 16px;
+}
+
 /* ── Orders filter bar (in topbar, visible when on orders tab) ── */
 .rpos-orders-filters {
 	display: flex;
