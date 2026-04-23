@@ -30,7 +30,7 @@ def get_menu_items():
 
 @frappe.whitelist()
 def get_tables():
-	"""Get all tables with their current status."""
+	"""Get all tables with their current status and occupancy."""
 	tables = frappe.get_all(
 		"Restaurant Table",
 		fields=["name", "table_number", "status", "seating_capacity", "current_order"],
@@ -45,15 +45,22 @@ def get_tables():
 				{"item_name": item.item_name, "quantity": item.quantity, "amount": item.amount}
 				for item in order.items
 			]
+			# Occupied seats: use covers field if it exists, else fall back to seating_capacity
+			try:
+				covers = cint(getattr(order, "covers", None) or 0)
+			except Exception:
+				covers = 0
+			table["occupied_seats"] = covers if covers > 0 else table.seating_capacity
 		else:
 			table["order_total"] = 0
 			table["order_items"] = []
+			table["occupied_seats"] = 0
 
 	return tables
 
 
 @frappe.whitelist()
-def create_order(items, order_type, table=None, customer_name=None, notes=None):
+def create_order(items, order_type, table=None, customer_name=None, notes=None, covers=None):
 	"""Create a new restaurant order quickly from the POS page.
 
 	Args:
@@ -62,6 +69,7 @@ def create_order(items, order_type, table=None, customer_name=None, notes=None):
 		table: Restaurant Table name (for Dine In)
 		customer_name: Optional customer name
 		notes: Optional special instructions
+		covers: Number of guests at the table (Dine In only)
 	"""
 	if isinstance(items, str):
 		items = json.loads(items)
@@ -77,6 +85,13 @@ def create_order(items, order_type, table=None, customer_name=None, notes=None):
 		"notes": notes,
 		"order_date": now_datetime(),
 	})
+
+	# Store covers (guest count) if the field exists on the doctype
+	if covers and order_type == "Dine In":
+		try:
+			order.covers = cint(covers)
+		except Exception:
+			pass
 
 	for item in items:
 		menu_item = frappe.get_doc("Restaurant Menu Item", item.get("menu_item"))

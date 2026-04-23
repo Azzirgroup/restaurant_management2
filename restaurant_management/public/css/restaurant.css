@@ -1,2 +1,53 @@
 /* Restaurant Management - Global Styles */
 /* This file is included app-wide via hooks.py */
+
+/* Full width layout for desk page */
+.layout-main {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+.layout-main-section-wrapper {
+	width: 100% !important;
+	max-width: none !important;
+	padding: 0 !important;
+}
+
+.layout-main-section {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+/* Ensure editor container uses full width */
+.editor-js-container {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+.desk-page {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+/* Codex editor full width */
+.codex-editor {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+.codex-editor__redactor {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+/* Widget grid full width */
+.ce-block {
+	width: 100% !important;
+	max-width: none !important;
+}
+
+/* Remove any container margins that limit width */
+.container, .container-fluid {
+	max-width: none !important;
+	width: 100% !important;
+}

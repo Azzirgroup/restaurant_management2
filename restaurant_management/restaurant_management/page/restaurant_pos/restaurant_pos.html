@@ -1,97 +1,225 @@
-<div id="restaurant-pos-app">
-	<!-- POS Tabs -->
-	<div class="pos-tabs">
-		<button class="pos-tab active" data-tab="new-order">
-			<i class="fa fa-plus-circle"></i> New Order
-		</button>
-		<button class="pos-tab" data-tab="orders-list">
-			<i class="fa fa-list"></i> Orders <span class="pos-tab-badge" id="orders-badge"></span>
-		</button>
-		<button class="pos-tab" data-tab="tables-view">
-			<i class="fa fa-th-large"></i> Tables
-		</button>
-	</div>
+<div id="rpos-root">
 
-	<!-- TAB 1: New Order -->
-	<div class="pos-tab-content active" id="tab-new-order">
-		<div class="pos-header">
-			<div class="pos-header-left">
-				<h3 class="pos-title">🍽️ Restaurant POS</h3>
-			</div>
-			<div class="pos-header-right">
-				<div class="order-type-toggle">
-					<button class="btn btn-order-type active" data-type="Dine In">
-						<i class="fa fa-utensils"></i> Dine In
-					</button>
-					<button class="btn btn-order-type" data-type="Parcel">
-						<i class="fa fa-shopping-bag"></i> Parcel
-					</button>
-				</div>
-				<select id="table-selector" class="form-control table-select">
-					<option value="">Select Table...</option>
-				</select>
-			</div>
-		</div>
+	<!-- ══════════════════════════════════════
+		 POS TOP NAVIGATION BAR
+	══════════════════════════════════════ -->
+	<div class="rpos-topbar">
 
-		<div class="pos-body">
-			<div class="pos-menu-panel">
-				<div class="menu-search">
-					<input type="text" id="menu-search" class="form-control" placeholder="🔍 Search menu items...">
-				</div>
-				<div class="menu-categories" id="menu-categories"></div>
-				<div class="menu-items" id="menu-items"></div>
-			</div>
-
-			<div class="pos-order-panel">
-				<div class="order-header">
-					<h4>Current Order</h4>
-					<span id="order-count" class="badge badge-primary">0 items</span>
-				</div>
-				<div class="order-items" id="order-items">
-					<div class="empty-order">
-						<i class="fa fa-shopping-cart fa-3x"></i>
-						<p>No items added yet</p>
-					</div>
-				</div>
-				<div class="order-footer">
-					<div class="order-total">
-						<span>Total</span>
-						<span id="order-total" class="total-amount">₹0.00</span>
-					</div>
-					<div class="order-actions">
-						<button id="btn-clear-order" class="btn btn-danger btn-sm">
-							<i class="fa fa-trash"></i> Clear
-						</button>
-						<button id="btn-save-order" class="btn btn-primary btn-lg">
-							<i class="fa fa-check"></i> Place Order
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- TAB 2: Orders List -->
-	<div class="pos-tab-content" id="tab-orders-list">
-		<div class="orders-toolbar">
-			<div class="orders-filters">
-				<button class="btn orders-filter active" data-status="active">🔴 Active</button>
-				<button class="btn orders-filter" data-status="In Progress">📝 New</button>
-				<button class="btn orders-filter" data-status="Preparing">🔥 Preparing</button>
-				<button class="btn orders-filter" data-status="Ready">✅ Ready</button>
-				<button class="btn orders-filter" data-status="Served">🍽️ Served</button>
-				<button class="btn orders-filter" data-status="Completed">✔️ Done</button>
-			</div>
-			<button class="btn btn-sm orders-refresh" id="btn-refresh-orders">
-				<i class="fa fa-sync"></i> Refresh
+		<!-- Tab Navigation -->
+		<div class="rpos-tabs">
+			<button class="rpos-tab active" data-tab="new-order">
+				<span class="rpos-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+						<path d="M12 5v14M5 12h14"/>
+					</svg>
+				</span>
+				<span class="rpos-tab-label">New Order</span>
+			</button>
+			<button class="rpos-tab" data-tab="orders-list">
+				<span class="rpos-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+						<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+					</svg>
+				</span>
+				<span class="rpos-tab-label">Orders</span>
+				<span class="rpos-tab-badge" id="orders-badge"></span>
+			</button>
+			<button class="rpos-tab" data-tab="tables-view">
+				<span class="rpos-tab-icon">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+						<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+						<rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+					</svg>
+				</span>
+				<span class="rpos-tab-label">Tables</span>
 			</button>
 		</div>
-		<div class="orders-list" id="orders-list"></div>
+
+		<!-- Right side controls (only visible on New Order tab) -->
+		<div class="rpos-topbar-controls" id="rpos-topbar-controls">
+			<!-- Order Type Toggle -->
+			<div class="rpos-order-type-pill">
+				<button class="rpos-type-btn active" data-type="Dine In">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M3 11l19-9-9 19-2-8-8-2z"/>
+					</svg>
+					Dine In
+				</button>
+				<button class="rpos-type-btn" data-type="Parcel">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M5 8h14M5 8a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v.5a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/>
+					</svg>
+					Parcel
+				</button>
+			</div>
+
+			<!-- Table Selector -->
+			<div class="rpos-table-wrap" id="rpos-table-wrap">
+				<svg class="rpos-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+				</svg>
+				<select id="table-selector" class="rpos-table-select">
+					<option value="">Select Table…</option>
+				</select>
+			</div>
+
+			<!-- Number of Guests -->
+			<div class="rpos-guests-wrap" id="rpos-guests-wrap" title="Number of guests at the table">
+				<svg class="rpos-select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>
+					<path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.87"/>
+				</svg>
+				<input type="number" id="covers-input" class="rpos-covers-input"
+					min="1" max="20" placeholder="Guests"
+					title="Number of guests">
+			</div>
+
+			<!-- Live Clock -->
+			<div class="rpos-clock" id="rpos-clock">--:--:--</div>
+		</div>
+
+		<!-- Refresh button for orders tab (hidden by default) -->
+		<div class="rpos-topbar-orders-ctrl" id="rpos-topbar-orders-ctrl" style="display:none">
+			<div class="rpos-orders-filters" id="orders-filters-inline">
+				<button class="rpos-filter-btn active" data-status="active">
+					<span class="rpos-filter-dot" style="background:#FF6B6B"></span>Active
+				</button>
+				<button class="rpos-filter-btn" data-status="In Progress">
+					<span class="rpos-filter-dot" style="background:#FF9800"></span>In Progress
+				</button>
+				<button class="rpos-filter-btn" data-status="Preparing">
+					<span class="rpos-filter-dot" style="background:#FFC107"></span>Preparing
+				</button>
+				<button class="rpos-filter-btn" data-status="Ready">
+					<span class="rpos-filter-dot" style="background:#9C27B0"></span>Ready
+				</button>
+				<button class="rpos-filter-btn" data-status="Served">
+					<span class="rpos-filter-dot" style="background:#00BCD4"></span>Served
+				</button>
+				<button class="rpos-filter-btn" data-status="Completed">
+					<span class="rpos-filter-dot" style="background:#4CAF50"></span>Completed
+				</button>
+			</div>
+			<button class="rpos-btn rpos-btn-outline rpos-btn-sm" id="btn-refresh-orders">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+					<polyline points="23 4 23 10 17 10"/>
+					<path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+				</svg>
+				Refresh
+			</button>
+		</div>
 	</div>
 
-	<!-- TAB 3: Tables View -->
-	<div class="pos-tab-content" id="tab-tables-view">
-		<h4 class="section-title">📋 Table Overview</h4>
-		<div class="tables-grid" id="tables-grid"></div>
+	<!-- ══════════════════════════════════════
+		 MAIN CONTENT
+	══════════════════════════════════════ -->
+	<div class="rpos-content">
+
+		<!-- ─── TAB 1: NEW ORDER ─── -->
+		<div class="rpos-pane active" id="tab-new-order">
+			<div class="rpos-pos-layout">
+
+				<!-- LEFT: Menu Panel -->
+				<div class="rpos-menu-panel">
+					<!-- Search Bar -->
+					<div class="rpos-search-wrap">
+						<svg class="rpos-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+							<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+						</svg>
+						<input type="text" id="menu-search" class="rpos-search-input" placeholder="Search dishes, drinks…">
+						<button class="rpos-search-clear" id="rpos-search-clear" title="Clear">✕</button>
+					</div>
+
+					<!-- Category Pills -->
+					<div class="rpos-categories-scroll">
+						<div class="rpos-categories" id="menu-categories"></div>
+					</div>
+
+					<!-- Menu Items Grid -->
+					<div class="rpos-items-grid" id="menu-items">
+						<div class="rpos-loading-state">
+							<div class="rpos-spinner"></div>
+							<span>Loading menu…</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- RIGHT: Order Cart -->
+				<div class="rpos-cart-panel">
+					<div class="rpos-cart-header">
+						<div class="rpos-cart-title">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+								<path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.99-1.61L23 6H6"/>
+							</svg>
+							Current Order
+						</div>
+						<span class="rpos-cart-count" id="order-count">0 items</span>
+					</div>
+
+					<div class="rpos-cart-items" id="order-items">
+						<div class="rpos-cart-empty">
+							<div class="rpos-empty-bowl">🥣</div>
+							<p>Cart is empty</p>
+							<small>Tap any item to add</small>
+						</div>
+					</div>
+
+					<div class="rpos-cart-footer">
+						<div class="rpos-cart-summary">
+							<div class="rpos-summary-row">
+								<span>Subtotal</span>
+								<span id="order-subtotal">0.00</span>
+							</div>
+							<div class="rpos-summary-divider"></div>
+							<div class="rpos-summary-row rpos-summary-grand">
+								<span>Total</span>
+								<span id="order-total" class="rpos-grand-total">0.00</span>
+							</div>
+						</div>
+						<div class="rpos-cart-actions">
+							<button id="btn-clear-order" class="rpos-btn rpos-btn-ghost">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<polyline points="3 6 5 6 21 6"/>
+									<path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+								</svg>
+								Clear
+							</button>
+							<button id="btn-save-order" class="rpos-btn rpos-btn-primary">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+									<polyline points="20 6 9 17 4 12"/>
+								</svg>
+								Place Order
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- ─── TAB 2: ORDERS LIST ─── -->
+		<div class="rpos-pane" id="tab-orders-list">
+			<div class="rpos-orders-list" id="orders-list"></div>
+		</div>
+
+		<!-- ─── TAB 3: TABLES VIEW ─── -->
+		<div class="rpos-pane" id="tab-tables-view">
+			<div class="rpos-tables-header">
+				<h2 class="rpos-section-heading">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<rect x="2" y="7" width="20" height="14" rx="2"/>
+						<path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+					</svg>
+					Table Overview
+				</h2>
+				<div class="rpos-tables-legend">
+					<span><i class="rpos-legend-dot available"></i>Available</span>
+					<span><i class="rpos-legend-dot occupied"></i>Occupied</span>
+					<span><i class="rpos-legend-dot reserved"></i>Reserved</span>
+				</div>
+			</div>
+			<div class="rpos-tables-grid" id="tables-grid"></div>
+		</div>
+
 	</div>
 </div>
