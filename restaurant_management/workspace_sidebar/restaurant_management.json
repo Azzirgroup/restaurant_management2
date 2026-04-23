@@ -1,0 +1,101 @@
+{
+ "app": "restaurant_management",
+ "creation": "2026-04-22 17:37:00.251044",
+ "docstatus": 0,
+ "doctype": "Workspace Sidebar",
+ "header_icon": "restaurant",
+ "idx": 0,
+ "items": [
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "coffee",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Restaurant POS",
+   "link_to": "restaurant-pos",
+   "link_type": "Page",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "home",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Home",
+   "link_to": "Restaurant Management",
+   "link_type": "Workspace",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "salad",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Kitchen Display",
+   "link_to": "kitchen-display",
+   "link_type": "Page",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "table_2",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Restaurant Table",
+   "link_to": "Restaurant Table",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "menu",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Restaurant Menu Item",
+   "link_to": "Restaurant Menu Item",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "badge-dollar-sign",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Restaurant Revenue",
+   "link_to": "Restaurant Revenue",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Restaurant Settings",
+   "link_to": "Restaurant Settings",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-04-23 07:01:53.689430",
+ "modified_by": "Administrator",
+ "module": "Restaurant Management",
+ "name": "Restaurant Management",
+ "owner": "Administrator",
+ "standard": 1,
+ "title": "Restaurant Management"
+}
