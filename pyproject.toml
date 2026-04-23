@@ -1,0 +1,23 @@
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "restaurant_management"
+authors = [
+    { name = "Restaurant Management", email = "info@restaurant.com" }
+]
+description = "Restaurant Billing & Order Management for ERPNext — Dine-in & Parcel orders, KOT & Bill printing, Table management, Revenue analytics"
+readme = "README.md"
+dynamic = ["version"]
+requires-python = ">=3.10"
+
+dependencies = [
+    # No extra dependencies required beyond Frappe / ERPNext
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/restaurant_management"
+
+[tool.flit.module]
+name = "restaurant_management"
