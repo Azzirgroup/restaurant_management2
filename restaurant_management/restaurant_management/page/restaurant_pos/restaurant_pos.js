@@ -54,20 +54,35 @@ class RestaurantPOS {
 			const $body = $("body");
 			const $sidebar = $(".layout-side-section");
 			if (!$sidebar.length) {
-				return;
+				return false;
 			}
 
 			if (!$body.hasClass("sidebar-collapsed") || !$sidebar.hasClass("hidden")) {
 				const $link = $(".collapse-sidebar-link");
 				if ($link.length) {
 					$link.trigger("click");
+				} else {
+					$body.addClass("sidebar-collapsed");
+					$sidebar.addClass("hidden");
 				}
+			}
+
+			return true;
+		};
+
+		const attemptCollapse = () => {
+			if (!collapseSidebar()) {
+				setTimeout(attemptCollapse, 250);
 			}
 		};
 
-		frappe.after_ajax(() => {
-			setTimeout(collapseSidebar, 350);
-		});
+		const scheduleCollapse = () => setTimeout(attemptCollapse, 350);
+
+		if (window.frappe && frappe.after_ajax) {
+			frappe.after_ajax(scheduleCollapse);
+		} else {
+			$(document).ready(scheduleCollapse);
+		}
 	}
 
 	/* ─────────────────────────────
