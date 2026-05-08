@@ -52,36 +52,61 @@ class RestaurantPOS {
 	_collapse_frappe_sidebar() {
 		const collapseSidebar = () => {
 			const $body = $("body");
-			const $sidebar = $(".layout-side-section");
+			const sidebarSelectors = [
+				".layout-side-section",
+				".sidebar",
+				".app-sidebar",
+				".sidebar-wrapper",
+				".page-sidebar"
+			];
+			const $sidebar = $(sidebarSelectors.join(", "));
 			if (!$sidebar.length) {
 				return false;
 			}
 
-			if (!$body.hasClass("sidebar-collapsed") || !$sidebar.hasClass("hidden")) {
-				const $link = $(".collapse-sidebar-link");
-				if ($link.length) {
-					$link.trigger("click");
+			const sidebarCollapsed = $body.hasClass("sidebar-collapsed") || $sidebar.hasClass("hidden");
+			if (!sidebarCollapsed) {
+				const toggleSelectors = [
+					".collapse-sidebar-link",
+					".sidebar-toggle",
+					".toggle-sidebar",
+					".layout-side-section .collapse-sidebar-link",
+					".navbar-collapse-link",
+					".sidebar-collapse-toggle"
+				];
+				const $toggle = $(toggleSelectors.join(", ")).filter(":visible");
+				if ($toggle.length) {
+					$toggle.first().trigger("click");
 				} else {
 					$body.addClass("sidebar-collapsed");
 					$sidebar.addClass("hidden");
 				}
 			}
 
-			return true;
+			return $body.hasClass("sidebar-collapsed") || $sidebar.hasClass("hidden");
 		};
 
-		const attemptCollapse = () => {
-			if (!collapseSidebar()) {
-				setTimeout(attemptCollapse, 250);
+		const observer = new MutationObserver(() => {
+			if (collapseSidebar()) {
+				observer.disconnect();
 			}
+		});
+
+		observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+
+		const initCollapse = () => {
+			collapseSidebar();
 		};
 
-		const scheduleCollapse = () => setTimeout(attemptCollapse, 350);
-
-		if (window.frappe && frappe.after_ajax) {
-			frappe.after_ajax(scheduleCollapse);
+		if (document.readyState === "complete" || document.readyState === "interactive") {
+			initCollapse();
 		} else {
-			$(document).ready(scheduleCollapse);
+			document.addEventListener("DOMContentLoaded", initCollapse);
+		}
+
+		window.addEventListener("load", initCollapse);
+		if (window.frappe && frappe.after_ajax) {
+			frappe.after_ajax(initCollapse);
 		}
 	}
 
