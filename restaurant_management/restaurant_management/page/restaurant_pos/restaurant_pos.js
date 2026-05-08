@@ -50,17 +50,23 @@ class RestaurantPOS {
 	   COLLAPSE FRAPPE NATIVE SIDEBAR BY DEFAULT
 	───────────────────────────────────────── */
 	_collapse_frappe_sidebar() {
-		frappe.after_ajax(() => {
-			setTimeout(() => {
-				// Only collapse if not already collapsed
-				if (!$("body").hasClass("sidebar-collapsed") &&
-					!$(".layout-side-section").hasClass("hidden")) {
-					const $link = $(".collapse-sidebar-link");
-					if ($link.length) {
-						$link.trigger("click");
-					}
+		const collapseSidebar = () => {
+			const $body = $("body");
+			const $sidebar = $(".layout-side-section");
+			if (!$sidebar.length) {
+				return;
+			}
+
+			if (!$body.hasClass("sidebar-collapsed") || !$sidebar.hasClass("hidden")) {
+				const $link = $(".collapse-sidebar-link");
+				if ($link.length) {
+					$link.trigger("click");
 				}
-			}, 350);
+			}
+		};
+
+		frappe.after_ajax(() => {
+			setTimeout(collapseSidebar, 350);
 		});
 	}
 

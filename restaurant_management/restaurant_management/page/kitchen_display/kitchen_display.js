@@ -70,6 +70,12 @@ class KitchenDisplay {
         let $container = $("#kds-orders");
         $container.empty();
 
+        let activeOrders = this.orders.length;
+        let preparingOrders = this.orders.filter((o) => o.status === "Preparing").length;
+        let pendingItems = this.orders.reduce((count, order) => {
+            return count + (order.items || []).filter((item) => item.status !== "Prepared").length;
+        }, 0);
+
         if (this.orders.length === 0) {
             $container.html(`
 				<div class="kds-empty">
@@ -79,10 +85,16 @@ class KitchenDisplay {
 				</div>
 			`);
             $("#kds-order-count").text("0 active");
+            $("#kds-order-count-card").text("0");
+            $("#kds-pending-count").text("0");
+            $("#kds-preparing-count").text("0");
             return;
         }
 
-        $("#kds-order-count").text(`${this.orders.length} active`);
+        $("#kds-order-count").text(`${activeOrders} active`);
+        $("#kds-order-count-card").text(activeOrders);
+        $("#kds-pending-count").text(pendingItems);
+        $("#kds-preparing-count").text(preparingOrders);
 
         this.orders.forEach((order) => {
             let elapsed = this.get_elapsed_time(order.order_date);

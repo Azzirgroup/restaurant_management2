@@ -57,7 +57,7 @@
 
 /* ─────────────────────────────────
    COLLAPSE FRAPPE SIDEBAR BY DEFAULT
-   (injected via JS on page load)
+   (enforced by JS on page load)
 ───────────────────────────────── */
 /* When sidebar is collapsed Frappe adds .hidden to .layout-side-section */
 /* We also smooth the transition */
